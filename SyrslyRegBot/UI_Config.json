@@ -1,0 +1,42 @@
+﻿{
+    "Cooldown": {
+        "group": "Core", 
+        "label": "Default Cooldown (seconds)", 
+        "max": 100, 
+        "min": 0, 
+        "ticks": 1, 
+        "tooltip": "Default value for how long the command should go on cooldown for", 
+        "type": "slider", 
+        "value": 6
+    }, 
+    "Info": {
+        "group": "Core", 
+        "label": "Default Users", 
+        "tooltip": "This field should only be filled when using the user_specific permission.", 
+        "type": "textbox", 
+        "value": ""
+    }, 
+    "Permission": {
+        "group": "Core", 
+        "items": [
+            "everyone", 
+            "moderator", 
+            "subscriber", 
+            "user_specific", 
+            "editor"
+        ], 
+        "label": "Default Permission", 
+        "tooltip": "Default value for who is able to use the command", 
+        "type": "dropdown", 
+        "value": "everyone"
+    }, 
+    "btnStart": {
+        "function": "EditConfigFile", 
+        "group": "Core", 
+        "label": "Edit Regex File", 
+        "tooltip": "Opens editor to edit the regex file - Reload script after editing", 
+        "type": "button", 
+        "wsevent": "EVENT_START_TIMER"
+    }, 
+    "output_file": "Settings/settings.json"
+}
