@@ -1,3 +1,15 @@
+#------------------------------------------------------------
+#   Streamlabs Chatbot Smart Regex
+#------------------------------------------------------------
+#   Give your Streamlabs Chatbot some
+#   personality using regex and smart responses.
+#   Cooldowns supported. Costs not yet supported.
+#
+#   Get the latest version of script at:
+#   https://github.com/syrsly/StreamlabsChatbotSmartRegex
+#
+#------------------------------------------------------------
+
 #---------------------------
 #   Import Libraries
 #---------------------------
@@ -92,8 +104,14 @@ def Init():
 #---------------------------
 def Execute(data):
     #   only handle messages from chat
-    if data.IsChatMessage() and data.IsFromTwitch() and not data.IsWhisper():
-
+    fromValidSource = 0
+    if data.IsFromYoutube():
+        username = data.UserName
+        fromValidSource = 1
+    if data.IsFromTwitch():
+        username = data.User
+        fromValidSource = 1
+    if data.IsChatMessage() and fromValidSource == 1 and not data.IsWhisper():
         found = False
         regex = ''
         obj = {}
@@ -119,14 +137,14 @@ def Execute(data):
 			# regex = re.search("^/.*/$", token).group(0).strip('/')
 			# rename all commands to use dynamic username as well as command name
 			Parent.Log(ScriptName,'obj command: '+repr(obj['command']))
-			if not Parent.IsOnUserCooldown(ScriptName, ''.join(obj['command']), data.User) and not Parent.IsOnCooldown(ScriptName, ''.join(obj['command'])) and Parent.HasPermission(data.User, obj['permission'], obj['users']):
+			if not Parent.IsOnUserCooldown(ScriptName, ''.join(obj['command']), username) and not Parent.IsOnCooldown(ScriptName, ''.join(obj['command'])) and Parent.HasPermission(username, obj['permission'], obj['users']):
 				Parent.Log(ScriptName,'message_pieces in if found: '+repr(message_pieces))
-				response = Parse(obj['response'], data.User, data.Message, list(message_pieces))
+				response = Parse(obj['response'], username, data.Message, list(message_pieces))
 				Parent.SendStreamMessage(response)    # Send your message to chat
 				if (obj['cooldowntype'] == 'global'):
 					Parent.AddCooldown(ScriptName, obj['command'], obj['cooldown'])  # Put the command on global cooldown
 				else:
-					Parent.AddUserCooldown(ScriptName,obj['command'],data.User,obj['cooldown'])  # Put the command on user-specific cooldown
+					Parent.AddUserCooldown(ScriptName,obj['command'],username,obj['cooldown'])  # Put the command on user-specific cooldown
 
 #---------------------------
 #   [Required] Tick method (Gets called during every iteration even when there is no incoming data)
@@ -138,22 +156,37 @@ def Tick():
 #   [Optional] Parse method (Allows you to create your own custom $parameters)
 #---------------------------
 def Parse(parseString, username, message, message_pieces):
-	temp_username = username.lower()
-	Parent.Log(ScriptName,'Parse: message_pieces: '+repr(message_pieces))
-	if len(message_pieces)>0:
-		Parent.Log(ScriptName,'Parse: message_pieces[0] exists: '+message_pieces[0])
-		parseString = parseString.replace('$insult', random.choice(['$resp1 is such a loser! Gawd!','If $resp1 was a chicken, it would pick up corn with its ass.','$resp1\'s mother is so fat, the recursive function computing her mass causes a stack overflow.','If the stream goes offline, it\'s $resp1\'s fault. Kappa','$resp1 could not pour water out of a boot if the instructions were written on the heel.','Somewhere, a tree is working really hard to replace the oxygen $resp1 used. They should say sorry.','$resp1 is bright as a black hole and twice as dense!','$resp1 has the subtly of a brick and the depth of a shot glass','$resp1 should try eating some makeup, at least they would be pretty on the inside.']))
-		parseString = parseString.replace('$resp1', message_pieces[0])
-	if len(message_pieces)>1:
-		Parent.Log(ScriptName,'Parse: message_pieces[1] exists: '+message_pieces[1])
-		parseString = parseString.replace('$resp2', message_pieces[1])
+    temp_username = username.lower()
+    Parent.Log(ScriptName,'Parse: message_pieces: '+repr(message_pieces))
+    #if one (1) word or more in the message, check for $resp1 in it:
+    if len(message_pieces)>0:
+        Parent.Log(ScriptName,'Parse: message_pieces[0] exists: '+message_pieces[0])
+        parseString = parseString.replace('$resp1', message_pieces[0])
+    #if two (2) words or more in the message, check for $resp2 in it:
+    if len(message_pieces)>1:
+        Parent.Log(ScriptName,'Parse: message_pieces[1] exists: '+message_pieces[1])
+        parseString = parseString.replace('$resp2', message_pieces[1])
+
+    #if $weather in response, reeplace with api response
+
+    if (parseString.find('$weather') != -1):
+        Parent.Log(ScriptName,'found weather')
+        #get weather data from the OpenWeatherMap API
+        response = Parent.GetRequest("http://api.openweathermap.org/data/2.5/weather?q=placename&appid=appidhere",{})
+        Parent.Log(ScriptName,'response: '+repr(response))
+        value = ast.literal_eval(response) #turns the returned string into an object using a stable eval method
+        value2 = json.loads(value['response'])
+        parseString = parseString.replace('$weather', 'Lat: '+str(value2['coord']['lat'])+' Lon: '+str(value2['coord']['lon'])+' Temp: '+str(value2['main']['temp'])+' (Feels like: '+str(value2['main']['feels_like'])+')') #we use the str method to convert whatever value is returned into a string value (integer/float/etc.)
+	#if $joke in response, replace with a joke
 	if (parseString.find('$joke') != -1):
-		# response = requests.get("https://icanhazdadjoke.com/nightbot")
 		Parent.Log(ScriptName,'found joke')
+		#get joke from the ICanHazDadJoke API (you can also use jokes.conf data here)
 		response = Parent.GetRequest("https://icanhazdadjoke.com/nightbot",{})
 		Parent.Log(ScriptName,'response: '+repr(response))
 		value = ast.literal_eval(response)
 		parseString = parseString.replace('$joke', value['response'])
+	#if response in our regex file has $message, return the original message that the user posted:
+	parseString = parseString.replace('$user', username)
 	parseString = parseString.replace('$message', message)
 	parseString = parseString.replace('$random_comeback', random.choice(['Double stamped! No takebacksies! You can\'t triple stamp a double stamp!','DansGame','The whole world knows that! Where you been all this time?!','MaxLOL']))
 	parseString = parseString.replace('$random_emote', random.choice(['CorgiDerp','DansGame','BrokeBack','CrreamAwk','MaxLOL']))

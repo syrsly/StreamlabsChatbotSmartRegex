@@ -1,5 +1,7 @@
 # StreamlabsChatbotSmartRegex
- Give your Streamlabs Chatbot some personality using regex and smart responses. Cooldowns supported. Costs not yet supported.
+Make sure you get the latest version from https://github.com/syrsly/StreamlabsChatbotSmartRegex
+
+Give your Streamlabs Chatbot some personality using regex and smart responses. Cooldowns supported. Costs not yet supported.
 
 
 This script add-on for Streamlabs Chatbot/Ankhbot was created by Syrsly for his channel's bot at https://www.twitch.tv/syrsly and is based on work by Reecon: https://github.com/Reecon/SLCatchPhrases
@@ -13,9 +15,19 @@ I update this script only in my free time. It is not my occupation. If you need 
 Say "You're breathtaking!" or "ur amazing" and you'll get a nice response with this:
 `youre /.*[yY]?[oO]?[uU]\'?[rR]?[eE]?\s+(\w+).*/ 4 everyone "No, *you're* $resp1!"`
 
-Test your regex's here: https://regexr.com/
+Say "!joke" or "Tell me a joke" or anything with "joke" word and the bot will tell a joke from ICanHazDadJoke API:
+`joke /.*joke.*/ 5 everyone "$joke"`
 
-Here's a short clip of myself working on my own regex ideas for this script: https://www.twitch.tv/syrsly/clip/CulturedCrowdedSwallowGrammarKing
+Note: Jokes can also be loaded from a jokes.conf file or via another API, but this will require minor code edits in the Parse function.
+
+Say "!weather" or "What's the weather like" or anything with "weather" word and the bot will tell weather from the OpenWeatherMap API (requires setup, see "OpenWeatherMap API" code in Parse function):
+`weather /.*weather.*/ 5 everyone "$weather"`
+
+Note: Weather API returns JSON response. This example is included to show you how to use JSON in the Parse function.
+
+Test your regex here: https://regexr.com/
+
+Here's a short clip of myself (Syrsly) working on my own regex ideas for this script: https://www.twitch.tv/syrsly/clip/CulturedCrowdedSwallowGrammarKing
 
 Like this bot script? I used to use it on my stream, but I've moved to greener pastures with PhantomBot. PhantomBot isn't as flexible or as easy to understand, but it can run headless on a VPS with 24/7 uptime, so I highly recommend it if you're willing to move to a VPS.
 
@@ -31,3 +43,5 @@ Regex looks anywhere in a user's chat message, not just the beginning or end. So
 
 The first regex found is the only one to trigger, per message. This is by design. I will not change this. Ever.
 If a message has 2 regex patterns, it will stop responding after the first one (based entirely on where the regex is on the regex list file). If you want one phrase to trigger rather than another one, place it higher on the list.
+
+Chat currency is not currently used in this script and I have no plans to support that feature. If it's really important to you, consider sponsoring the work. If you find bugs, feel free to report them in the issues section on GitHub and I can investigate the issues whenever it suits me. You can contact me via Twitter at twitter.com/syrslywastaken or send me an email at syrsly@syrsly.com if you need immediate support.
